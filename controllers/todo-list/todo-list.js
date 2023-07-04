@@ -1,3 +1,4 @@
+import Todo from "../../models/todo.js";
 import fs from "node:fs";
 
 const getAllTodosFS = () => {
@@ -53,27 +54,52 @@ export const getAllTodos = async (req, res) => {
 
   res.send(data);
 };
-
-export const createTodo = (req, res) => {
+export const createTodoC = (req, res) => {
+  const newTodo = new Todo({
+    text: req.body.text,
+    important: false,
+    done: false,
+    id: req.body.id
+      ? +req.body.id
+      : +dbTodos.reduce((prev, cur) => (cur.id > prev.id ? cur : prev), {
+          id: 0,
+        }).id + 1 || 1,
+    time: Date.now(),
+  });
+  // const newData = [...dbTodos, newTodo];
   try {
-    if (
-      dbTodos.some((el) => el.id == req.body.id) === false &&
-      req.body.id != undefined
-    ) {
-      const newData = [...dbTodos, req.body];
-      fs.writeFile("data/todo.json", JSON.stringify(newData), () => {
-        res.json(newData);
+    // if (
+    // dbTodos.some((el) => el.id == newData[newData.length - 1].id) === false
+    // ) {
+    newTodo
+      .save()
+      .then((result) => res.json(result))
+      .catch((e) => {
+        console.error("Error: ", e);
       });
-    } else {
-      res.status(400).json("An object with the same ID already exists");
-    }
+    // fs.writeFile("data/todo.json", JSON.stringify(newData), () => {
+    //   res.json(newData);
+    // });
+    // } else {
+    // res.status(400).json("Object already exists");
+    // }
   } catch (e) {
     res.status(500).json({
       message: e.message,
     });
   }
 };
-
+export const getOneTodo = (req, res) => {
+  try {
+    if (dbTodos.some((el) => el.id == req.params.id)) {
+      res.send(dbTodos.find((el) => el.id == req.params.id));
+    } else {
+      res.status(400).json({ message: "Todo is not defined" });
+    }
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
 export const deleteTodoById = (req, res) => {
   try {
     const newData = dbTodos.filter((i) => i.id != req.params.id);
@@ -86,7 +112,6 @@ export const deleteTodoById = (req, res) => {
     });
   }
 };
-
 export const updateOneTodo = (req, res) => {
   try {
     if (dbTodos.some((el) => el.id == req.params.id)) {

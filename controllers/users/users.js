@@ -78,7 +78,7 @@ export const createOneUser = (req, res) => {
         res.json(req.body);
       });
     } else {
-      res.status(400).json("An object with the same ID already exists");
+      res.status(400).json("Object already exists");
     }
   } catch (e) {
     res.status(500).json({
